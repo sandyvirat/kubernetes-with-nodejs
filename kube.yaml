@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-api
+spec:
+  replicas: 2   # Adjust the number of replicas as needed
+  selector:
+    matchLabels:
+      app: node-api
+  template:
+    metadata:
+      labels:
+        app: node-api
+    spec:
+      containers:
+        - name: node-api
+          image: 123va/vamsi:v2
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-api
+spec:
+  selector:
+    app: node-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+---
+# api-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: node-api-cron
+spec:
+  schedule: "*/5 * * * *"  # Adjust the cron schedule as needed
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: node-api-cron
+              image: 123va/vamsi:v2
+              command:
+                - /bin/sh
+                - -c
+                - curl -s http://localhost:3001/20/30
+              #args: [ "path-to-your-task-file.js" ]  # Replace with the path to your Node.js API task
+          restartPolicy: OnFailure
